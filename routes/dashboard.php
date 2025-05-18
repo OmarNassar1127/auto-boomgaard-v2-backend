@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Dashboard\DashboardCarController;
 use App\Http\Controllers\Dashboard\DashboardUserController;
+use App\Http\Controllers\Dashboard\DashboardStatisticsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'active.user'])->prefix('dashboard')->group(function () {
@@ -31,4 +32,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->prefix('dashboard')->group(f
     // User status management
     Route::patch('users/{user}/activate', [DashboardUserController::class, 'activate']);
     Route::patch('users/{user}/deactivate', [DashboardUserController::class, 'deactivate']);
+    
+    // Statistics
+    Route::get('statistics', [DashboardStatisticsController::class, 'index']);
 });
