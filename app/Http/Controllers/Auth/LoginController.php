@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +28,13 @@ class LoginController extends Controller
             ], 401);
         }
 
+        // Check if user is active
+        if (!$user->active) {
+            return response()->json([
+                'message' => 'Your account is not active. Please contact an administrator.',
+            ], 403);
+        }
+
         // Revoke all existing tokens
         $user->tokens()->delete();
 
@@ -37,6 +45,37 @@ class LoginController extends Controller
             'user' => $user,
             'token' => $token,
         ]);
+    }
+
+    /**
+     * Handle a register request to the application.
+     */
+    public function register(RegisterRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        // Hash the password
+        $validated['password'] = Hash::make($validated['password']);
+
+        // Set default role to verkoper if not provided
+        $validated['role'] = $validated['role'] ?? 'verkoper';
+
+        // Set active to false (requires admin approval)
+        $validated['active'] = false;
+
+        // Create the user
+        $user = User::create($validated);
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'active' => $user->active,
+            ],
+            'message' => 'Registration successful. Your account is pending approval by an administrator.',
+        ], 201);
     }
 
     /**
