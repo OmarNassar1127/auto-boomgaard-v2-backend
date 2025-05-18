@@ -64,7 +64,10 @@ class Car extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('images')
-            ->singleFile(false);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/jpg'])
+            ->singleFile(false)
+            ->useDisk('public')
+            ->useFallbackPath('images/default.jpg');
     }
 
     /**
