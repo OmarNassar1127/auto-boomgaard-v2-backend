@@ -19,4 +19,6 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [LoginController::class, 'register']);
     Route::post('logout', [LoginController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('user', [LoginController::class, 'user'])->middleware(['auth:sanctum', 'active.user']);
+    Route::post('change-password', [LoginController::class, 'changePassword'])->middleware(['auth:sanctum', 'active.user']);
+    Route::post('change-email', [LoginController::class, 'changeEmail'])->middleware(['auth:sanctum', 'active.user']);
 });

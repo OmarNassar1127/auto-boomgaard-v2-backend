@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\ChangeEmailRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -97,6 +99,63 @@ class LoginController extends Controller
     {
         return response()->json([
             'user' => $request->user(),
+        ]);
+    }
+
+    /**
+     * Change user password.
+     */
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $user = $request->user();
+
+        // Verify current password
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Het huidige wachtwoord is onjuist.',
+                'errors' => [
+                    'current_password' => ['Het huidige wachtwoord is onjuist.']
+                ]
+            ], 422);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($validated['new_password'])
+        ]);
+
+        return response()->json([
+            'message' => 'Wachtwoord succesvol gewijzigd.'
+        ]);
+    }
+
+    /**
+     * Change user email.
+     */
+    public function changeEmail(ChangeEmailRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $user = $request->user();
+
+        // Verify password
+        if (!Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'message' => 'Het wachtwoord is onjuist.',
+                'errors' => [
+                    'password' => ['Het wachtwoord is onjuist.']
+                ]
+            ], 422);
+        }
+
+        // Update email
+        $user->update([
+            'email' => $validated['email']
+        ]);
+
+        return response()->json([
+            'user' => $user,
+            'message' => 'E-mailadres succesvol gewijzigd.'
         ]);
     }
 }
