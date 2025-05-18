@@ -8,7 +8,7 @@ use App\Http\Controllers\Dashboard\Traits\ManagesCarStatus;
 use App\Http\Requests\Dashboard\CarStoreRequest;
 use App\Http\Requests\Dashboard\CarUpdateRequest;
 use App\Http\Resources\Dashboard\CarResource;
-use App\Http\Resources\Dashboard\CarCollection;
+use App\Http\Resources\Dashboard\CarListCollection;
 use App\Models\Car;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,18 +18,21 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class DashboardCarController extends Controller
 {
     use ManagesCarImages, ManagesCarStatus;
+
     /**
      * Display a listing of the resource.
+     * Uses optimized CarListCollection for performance.
      */
     public function index(Request $request): JsonResponse
     {
         $query = Car::query();
 
-        // Filter by status
+        // Filter by vehicle status
         if ($request->has('vehicle_status')) {
             $query->where('vehicle_status', $request->vehicle_status);
         }
 
+        // Filter by post status
         if ($request->has('post_status')) {
             $query->where('post_status', $request->post_status);
         }
@@ -40,16 +43,18 @@ class DashboardCarController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('brand', 'like', "%{$search}%")
                   ->orWhere('model', 'like', "%{$search}%")
-                  ->orWhere('year', 'like', "%{$search}%");
+                  ->orWhere('year', 'like', "%{$search}%")
+                  ->orWhere('color', 'like', "%{$search}%");
             });
         }
 
-        // Order by
+        // Order by created_at desc (newest first)
         $query->orderBy('created_at', 'desc');
 
+        // Paginate results
         $cars = $query->paginate($request->get('per_page', 15));
 
-        return response()->json(new CarCollection($cars));
+        return response()->json(new CarListCollection($cars));
     }
 
     /**
@@ -67,6 +72,7 @@ class DashboardCarController extends Controller
 
     /**
      * Display the specified resource.
+     * Uses full CarResource with all images and details.
      */
     public function show(Car $car): JsonResponse
     {

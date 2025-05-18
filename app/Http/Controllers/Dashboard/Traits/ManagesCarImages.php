@@ -19,32 +19,53 @@ trait ManagesCarImages
         $request->validate([
             'images' => 'required|array|max:20',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:10240', // 10MB max
+            'main_image_index' => 'nullable|integer|min:0',
         ]);
 
         $uploadedImages = [];
+        $mainImageIndex = $request->input('main_image_index', 0);
+        $images = $request->file('images');
 
-        foreach ($request->file('images') as $image) {
-            $media = $car->addMediaFromRequest('images')
-                ->each(function ($fileAdder) {
-                    $fileAdder->toMediaCollection('images');
-                });
+        if (!$images || !is_array($images)) {
+            return response()->json([
+                'message' => 'No images provided.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
-            if (is_array($media)) {
-                $uploadedImages = array_merge($uploadedImages, $media);
-            } else {
+        foreach ($images as $index => $image) {
+            if ($image->isValid()) {
+                $mediaAdder = $car->addMedia($image)
+                    ->usingName("Car image " . ($index + 1))
+                    ->usingFileName($image->getClientOriginalName());
+
+                // Set custom properties for main image
+                if ($index === $mainImageIndex) {
+                    $mediaAdder->withCustomProperties(['is_main' => true]);
+                } else {
+                    $mediaAdder->withCustomProperties(['is_main' => false]);
+                }
+
+                $media = $mediaAdder->toMediaCollection('images');
                 $uploadedImages[] = $media;
             }
         }
 
-        // If this is the first image uploaded, set it as main
-        if ($car->getMedia('images')->count() === count($uploadedImages)) {
-            $car->setMainImage($uploadedImages[0]);
+        // If this is the first upload and no images were set as main, set first as main
+        if (count($uploadedImages) > 0) {
+            $hasMain = collect($uploadedImages)->some(function ($media) {
+                return $media->getCustomProperty('is_main', false);
+            });
+            
+            if (!$hasMain) {
+                $uploadedImages[0]->setCustomProperty('is_main', true);
+                $uploadedImages[0]->save();
+            }
         }
 
         return response()->json([
             'data' => new CarResource($car->refresh()),
-            'message' => 'Images uploaded successfully.',
-        ]);
+            'message' => count($uploadedImages) . ' images uploaded successfully.',
+        ], Response::HTTP_CREATED);
     }
 
     /**
@@ -59,7 +80,15 @@ trait ManagesCarImages
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $car->setMainImage($media);
+        // Remove main flag from all images
+        $car->getMedia('images')->each(function ($item) {
+            $item->setCustomProperty('is_main', false);
+            $item->save();
+        });
+
+        // Set this image as main
+        $media->setCustomProperty('is_main', true);
+        $media->save();
 
         return response()->json([
             'data' => new CarResource($car->refresh()),
@@ -83,8 +112,13 @@ trait ManagesCarImages
         $media->delete();
 
         // If we deleted the main image, set another image as main if available
-        if ($wasMain && $car->getMedia('images')->count() > 0) {
-            $car->setMainImage($car->getMedia('images')->first());
+        if ($wasMain) {
+            $remainingImages = $car->getMedia('images');
+            if ($remainingImages->count() > 0) {
+                $firstImage = $remainingImages->first();
+                $firstImage->setCustomProperty('is_main', true);
+                $firstImage->save();
+            }
         }
 
         return response()->json([
