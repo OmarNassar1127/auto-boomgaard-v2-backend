@@ -22,7 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Remove CSRF protection from API routes since we're using token authentication
+        $middleware->validateCsrfTokens(except: [
+            'auth/*',
+            'dashboard/*',
+            'app/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
