@@ -4,7 +4,7 @@ use App\Http\Controllers\Dashboard\DashboardCarController;
 use App\Http\Controllers\Dashboard\DashboardUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum'])->prefix('dashboard')->group(function () {
+Route::middleware(['auth:sanctum', 'active.user'])->prefix('dashboard')->group(function () {
     // Car management - explicit routes
     Route::get('cars', [DashboardCarController::class, 'index']);
     Route::post('cars', [DashboardCarController::class, 'store']);

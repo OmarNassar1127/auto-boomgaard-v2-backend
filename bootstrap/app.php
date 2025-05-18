@@ -28,6 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'dashboard/*',
             'app/*',
         ]);
+        
+        // Register custom middleware aliases
+        $middleware->alias([
+            'active.user' => \App\Http\Middleware\ActiveUserMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
