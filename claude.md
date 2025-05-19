@@ -163,11 +163,74 @@ The Auto Boomgaard Backend is a Laravel-based RESTful API designed to power a ca
 | PATCH | `/dashboard/cars/{id}/publish` | Toggle publish status | ✅ |
 | PATCH | `/dashboard/cars/{id}/vehicle-status` | Update vehicle status | ✅ |
 
-### **Public Endpoints** (Future Implementation)
+### **Public API Endpoints**
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
+| GET | `/app/cars/featured` | Get featured cars for homepage | ❌ |
+| GET | `/app/cars/{id}/related` | Get related cars for detail page | ❌ |
 | GET | `/app/cars` | Public car listings | ❌ |
 | GET | `/app/cars/{id}` | Public car details | ❌ |
+
+## 🏷️ **Car Status & Business Logic**
+
+### **"Nieuw binnen" (New Arrival) Tag**
+Cars automatically receive the "Nieuw binnen" tag based on the following logic:
+
+- **Trigger**: When a car is created in the database (`created_at` timestamp)
+- **Duration**: 14 days (2 weeks) from creation date
+- **Automatic Removal**: Tag disappears automatically after 14 days
+- **Business Rule**: Based on creation date, not publication date
+
+```php
+// Implementation in CarResourceHelpers trait
+private function isRecentlyAdded(): bool
+{
+    return $this->created_at >= now()->subDays(14);
+}
+```
+
+### **Vehicle Status Management**
+Each car has two status fields:
+
+1. **`vehicle_status`**: Physical status of the vehicle
+   - `listed` - Available for sale (default)
+   - `reserved` - Customer interest/deposit paid
+   - `sold` - Sale completed
+   - `upcoming` - Not yet available for sale
+
+2. **`post_status`**: Publication status for website
+   - `draft` - Not visible on website
+   - `published` - Visible on website
+
+### **Frontend Display Logic**
+- Only cars with `post_status = 'published'` and `vehicle_status = 'listed'` appear on the public website
+- **Featured cars** endpoint returns the 6 most recent published/listed cars
+- **Related cars** endpoint excludes the current car and prioritizes same brand
+- **Main image** is determined by the `is_main = true` custom property in media attachments
+
+### **Image Management**
+Each car can have multiple images with the following logic:
+
+1. **Main Image Selection**:
+   - Priority: Image with `custom_properties['is_main'] = true`
+   - Fallback: First image in the collection
+   - Final fallback: `null` (no image available)
+
+2. **Image API Response**:
+   ```json
+   {
+     "image": "http://127.0.0.1:8001/storage/3/image.jpg",
+     "isPromo": true // if car is < 14 days old
+   }
+   ```
+
+### **Price and Tax Information**
+- **`price`**: Stored as formatted string (e.g., "€54.990,00")
+- **`tax_info`**: Tax status ("incl. BTW" or "Marge")
+- **API conversion**: Price converted to integer for frontend calculations
+- **VAT detection**: Automatically determined by checking if `tax_info` contains "incl"
+
+---
 
 ## 🔐 **Authentication System**
 
@@ -196,11 +259,13 @@ app/
 │   ├── Controllers/
 │   │   ├── Auth/
 │   │   │   └── LoginController.php
-│   │   └── Dashboard/
-│   │       ├── DashboardCarController.php
-│   │       └── Traits/
-│   │           ├── ManagesCarImages.php
-│   │           └── ManagesCarStatus.php
+│   │   ├── Dashboard/
+│   │   │   ├── DashboardCarController.php
+│   │   │   └── Traits/
+│   │   │       ├── ManagesCarImages.php
+│   │   │       └── ManagesCarStatus.php
+│   │   └── App/
+│   │       └── AppCarController.php (featured & related cars)
 │   ├── Requests/
 │   │   ├── Auth/
 │   │   │   └── LoginRequest.php
@@ -208,11 +273,16 @@ app/
 │   │       ├── CarStoreRequest.php
 │   │       └── CarUpdateRequest.php
 │   └── Resources/
-│       └── Dashboard/
-│           ├── CarResource.php
-│           └── CarCollection.php
+│       ├── Dashboard/
+│       │   ├── CarResource.php
+│       │   └── CarCollection.php
+│       └── App/
+│           ├── FeaturedCarResource.php
+│           ├── CarListResource.php
+│           └── Traits/
+│               └── CarResourceHelpers.php
 ├── Models/
-│   ├── Car.php (with HasMedia trait)
+│   ├── Car.php (with HasMedia trait, main image accessor)
 │   └── User.php (with HasApiTokens trait)
 │
 config/
@@ -228,12 +298,14 @@ database/
 │   ├── create_media_table.php
 │   └── create_personal_access_tokens_table.php
 └── seeders/
-    └── AdminUserSeeder.php
+    ├── AdminUserSeeder.php
+    ├── CarSeeder.php
+    └── DatabaseSeeder.php
 │
 routes/
 ├── auth.php (Authentication routes)
 ├── dashboard.php (Protected dashboard routes)
-└── app.php (Public routes - future)
+└── app.php (Public API routes)
 ```
 
 ## 🚀 **Features Implemented**
@@ -389,14 +461,17 @@ npm run dev
 
 ### **✅ Completed**
 - Authentication system with Sanctum
-- Car CRUD operations
-- Image management system
+- Car CRUD operations with advanced filtering
+- Image management with main image selection
 - JSON-based flexible data storage
+- Public API endpoints (featured & related cars)
+- "Nieuw binnen" (new arrival) tag system (14-day automatic)
+- Status management (vehicle & publication status)
 - CORS configuration
 - Admin dashboard API endpoints
-- Comprehensive validation
-- Error handling
-- Database design and migrations
+- Comprehensive validation and error handling
+- Database design with migrations and seeders
+- Main image prioritization system
 
 ### **🔄 In Progress**
 - Public API endpoints (planned)

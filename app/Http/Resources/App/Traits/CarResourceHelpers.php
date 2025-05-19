@@ -37,11 +37,11 @@ trait CarResourceHelpers
     }
 
     /**
-     * Check if car is recently added (within last 30 days).
+     * Check if car is recently added (within last 14 days).
      */
     private function isRecentlyAdded(): bool
     {
-        return $this->created_at >= now()->subDays(30);
+        return $this->created_at >= now()->subDays(14);
     }
 
     /**
