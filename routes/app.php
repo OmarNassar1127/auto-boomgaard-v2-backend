@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\App\AppCarController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,7 +15,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('app')->group(function () {
+    // Featured cars for homepage
+    Route::get('cars/featured', [AppCarController::class, 'featured']);
+    
     // Public car listings (to be implemented later)
-    // Route::get('cars', [AppCarController::class, 'index']);
-    // Route::get('cars/{car}', [AppCarController::class, 'show']);
+    Route::get('cars', [AppCarController::class, 'index']);
+    Route::get('cars/{car}', [AppCarController::class, 'show']);
 });
