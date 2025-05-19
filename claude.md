@@ -145,6 +145,11 @@ The Auto Boomgaard Backend is a Laravel-based RESTful API designed to power a ca
 | PUT | `/dashboard/cars/{id}` | Update car | ✅ |
 | DELETE | `/dashboard/cars/{id}` | Delete car | ✅ |
 
+### **Dashboard Statistics**
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/dashboard/statistics` | Get comprehensive statistics | ✅ |
+
 ### **Image Management**
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
