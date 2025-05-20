@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\App\FeaturedCarResource;
+use App\Http\Resources\App\CarListResource;
 use App\Models\Car;
 use Illuminate\Http\JsonResponse;
 
@@ -34,14 +35,21 @@ class AppCarController extends Controller
     }
 
     /**
-     * Get all cars for public listings (placeholder for future).
+     * Get all cars for public listings.
      */
     public function index(): JsonResponse
     {
-        // TODO: Implement public car listings with filters
+        // Get all published and listed cars
+        $cars = Car::query()
+            ->where('post_status', 'published')
+            ->where('vehicle_status', 'listed')
+            ->with('media')
+            ->latest('created_at')
+            ->get();
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Public car listings endpoint - coming soon',
+            'data' => CarListResource::collection($cars),
         ]);
     }
 
