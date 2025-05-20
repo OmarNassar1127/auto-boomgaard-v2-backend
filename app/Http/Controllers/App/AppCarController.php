@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\App\FeaturedCarResource;
 use App\Http\Resources\App\CarListResource;
+use App\Http\Resources\App\CarDetailResource;
 use App\Models\Car;
 use Illuminate\Http\JsonResponse;
 
@@ -54,14 +55,24 @@ class AppCarController extends Controller
     }
 
     /**
-     * Get single car details for public view (placeholder for future).
+     * Get single car details for public view.
      */
     public function show(Car $car): JsonResponse
     {
-        // TODO: Implement public car details
+        // Check if car is published and available
+        if ($car->post_status !== 'published') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Car not found',
+            ], 404);
+        }
+        
+        // Load all media associated with the car
+        $car->load('media');
+        
         return response()->json([
             'status' => 'success',
-            'message' => 'Public car details endpoint - coming soon',
+            'data' => new CarDetailResource($car),
         ]);
     }
 }
