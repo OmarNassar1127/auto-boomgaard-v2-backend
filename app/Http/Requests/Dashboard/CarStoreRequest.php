@@ -25,14 +25,14 @@ class CarStoreRequest extends FormRequest
             // Basic Information (required fields)
             'brand' => ['required', 'string', 'max:255'],
             'model' => ['required', 'string', 'max:255'],
-            'price' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
             'tax_info' => ['sometimes', 'string', 'max:255'],
-            'mileage' => ['required', 'string', 'max:255'],
-            'year' => ['required', 'string', 'max:255'],
+            'mileage' => ['required', 'integer', 'min:0'],
+            'year' => ['required', 'integer', 'min:1900', 'max:' . (date('Y') + 2)],
             'color' => ['required', 'string', 'max:255'],
             'transmission' => ['required', 'string', 'max:255'],
             'fuel' => ['required', 'string', 'max:255'],
-            'power' => ['required', 'string', 'max:255'],
+            'power' => ['required', 'integer', 'min:0'],
             
             // JSON fields (optional)
             'specifications' => ['sometimes', 'array'],

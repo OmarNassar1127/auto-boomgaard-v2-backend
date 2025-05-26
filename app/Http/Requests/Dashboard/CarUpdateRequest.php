@@ -25,14 +25,14 @@ class CarUpdateRequest extends FormRequest
             // Basic Information (all optional for updates)
             'brand' => ['sometimes', 'string', 'max:255'],
             'model' => ['sometimes', 'string', 'max:255'],
-            'price' => ['sometimes', 'string', 'max:255'],
+            'price' => ['sometimes', 'numeric', 'min:0'],
             'tax_info' => ['sometimes', 'string', 'max:255'],
-            'mileage' => ['sometimes', 'string', 'max:255'],
-            'year' => ['sometimes', 'string', 'max:255'],
+            'mileage' => ['sometimes', 'integer', 'min:0'],
+            'year' => ['sometimes', 'integer', 'min:1900', 'max:' . (date('Y') + 2)],
             'color' => ['sometimes', 'string', 'max:255'],
             'transmission' => ['sometimes', 'string', 'max:255'],
             'fuel' => ['sometimes', 'string', 'max:255'],
-            'power' => ['sometimes', 'string', 'max:255'],
+            'power' => ['sometimes', 'integer', 'min:0'],
             
             // JSON fields (optional)
             'specifications' => ['sometimes', 'array'],

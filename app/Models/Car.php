@@ -43,6 +43,10 @@ class Car extends Model implements HasMedia
         'specifications' => 'array',
         'highlights' => 'array',
         'options_accessories' => 'array',
+        'price' => 'decimal:2',
+        'mileage' => 'integer',
+        'year' => 'integer',
+        'power' => 'integer',
     ];
 
     /**
@@ -105,5 +109,45 @@ class Car extends Model implements HasMedia
         // Set this image as main
         $media->setCustomProperty('is_main', true);
         $media->save();
+    }
+
+    /**
+     * Get formatted price for display.
+     */
+    public function getFormattedPriceAttribute(): string
+    {
+        return '€' . number_format($this->price, 2, ',', '.');
+    }
+
+    /**
+     * Get formatted mileage for display.
+     */
+    public function getFormattedMileageAttribute(): string
+    {
+        return number_format($this->mileage, 0, ',', '.') . ' km';
+    }
+
+    /**
+     * Get formatted power for display.
+     */
+    public function getFormattedPowerAttribute(): string
+    {
+        return $this->power . ' pk';
+    }
+
+    /**
+     * Mutator for price to handle Dutch formatting input.
+     */
+    public function setPriceAttribute($value): void
+    {
+        if (is_string($value)) {
+            // Remove currency symbol and format to decimal
+            $cleanValue = preg_replace('/[^\d,.]/', '', $value);
+            $cleanValue = str_replace('.', '', $cleanValue); // Remove thousands separator
+            $cleanValue = str_replace(',', '.', $cleanValue); // Replace comma with dot
+            $this->attributes['price'] = (float) $cleanValue;
+        } else {
+            $this->attributes['price'] = $value;
+        }
     }
 }
