@@ -26,14 +26,14 @@ class LoginController extends Controller
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
-                'message' => 'The provided credentials are incorrect.',
+                'message' => 'De opgegeven inloggegevens zijn onjuist.',
             ], 401);
         }
 
         // Check if user is active
         if (!$user->active) {
             return response()->json([
-                'message' => 'Your account is not active. Please contact an administrator.',
+                'message' => 'Uw account is niet actief. Neem contact op met een beheerder.',
             ], 403);
         }
 
@@ -76,7 +76,7 @@ class LoginController extends Controller
                 'role' => $user->role,
                 'active' => $user->active,
             ],
-            'message' => 'Registration successful. Your account is pending approval by an administrator.',
+            'message' => 'Registratie succesvol. Uw account wacht op goedkeuring door een beheerder.',
         ], 201);
     }
 
@@ -88,7 +88,7 @@ class LoginController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Successfully logged out.',
+            'message' => 'Succesvol uitgelogd.',
         ]);
     }
 
