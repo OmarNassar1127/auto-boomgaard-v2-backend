@@ -23,7 +23,7 @@ trait ManagesCarImages
         ]);
 
         $uploadedImages = [];
-        $mainImageIndex = $request->input('main_image_index', 0);
+        $mainImageIndex = (int) $request->input('main_image_index', 0); // Cast to integer
         $images = $request->file('images');
 
         if (!$images || !is_array($images)) {
@@ -39,7 +39,9 @@ trait ManagesCarImages
                     ->usingFileName($image->getClientOriginalName());
 
                 // Set custom properties for main image
-                if ($index === $mainImageIndex) {
+                $isMainImage = ($index === $mainImageIndex);
+                
+                if ($isMainImage) {
                     $mediaAdder->withCustomProperties(['is_main' => true]);
                 } else {
                     $mediaAdder->withCustomProperties(['is_main' => false]);
